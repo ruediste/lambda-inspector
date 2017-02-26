@@ -6,14 +6,15 @@ import java.lang.instrument.Instrumentation;
 import java.lang.invoke.MethodType;
 import java.security.ProtectionDomain;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import jdk.internal.org.objectweb.asm.AnnotationVisitor;
+import jdk.internal.org.objectweb.asm.ClassReader;
+import jdk.internal.org.objectweb.asm.ClassVisitor;
+import jdk.internal.org.objectweb.asm.ClassWriter;
+import jdk.internal.org.objectweb.asm.MethodVisitor;
+import jdk.internal.org.objectweb.asm.Opcodes;
+import jdk.internal.org.objectweb.asm.Type;
 
+@SuppressWarnings("restriction")
 public class LambdaInspectorAgent {
     public static void agentmain(String agentArgs, Instrumentation inst) {
         premain(agentArgs, inst);
@@ -47,8 +48,6 @@ public class LambdaInspectorAgent {
                                 super.visitMethodInsn(opcode, owner, name, desc, itf);
                                 if ("jdk/internal/org/objectweb/asm/ClassWriter".equals(owner)
                                         && "visit".equals(name)) {
-                                    System.out.println("visit found");
-
                                     // get cw
                                     mv.visitVarInsn(Opcodes.ALOAD, 0);
                                     mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/invoke/InnerClassLambdaMetafactory",
@@ -64,10 +63,13 @@ public class LambdaInspectorAgent {
 
                                     // set owner
                                     mv.visitInsn(Opcodes.DUP);
-                                    mv.visitLdcInsn("implMethodClassName");
+                                    mv.visitLdcInsn("implMethodClass");
                                     mv.visitVarInsn(Opcodes.ALOAD, 0);
                                     mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/invoke/InnerClassLambdaMetafactory",
                                             "implMethodClassName", "Ljava/lang/String;");
+                                    mv.visitMethodInsn(Opcodes.INVOKESTATIC, "jdk/internal/org/objectweb/asm/Type",
+                                            "getObjectType",
+                                            "(Ljava/lang/String;)Ljdk/internal/org/objectweb/asm/Type;", false);
                                     mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                                             "jdk/internal/org/objectweb/asm/AnnotationVisitor", "visit",
                                             "(Ljava/lang/String;Ljava/lang/Object;)V", false);
