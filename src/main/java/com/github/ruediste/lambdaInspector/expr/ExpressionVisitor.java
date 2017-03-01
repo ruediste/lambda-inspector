@@ -13,4 +13,20 @@ public interface ExpressionVisitor<T> {
 
     T visit(NewExpression newExpression);
 
+    T visit(ArgumentExpression argumentExpression);
+
+    T visit(CapturedArgExpression capturedArgExpression);
+
+    T visit(UnaryExpression unaryExpression);
+
+    T visit(NewArrayExpression newArrayExpression);
+
+    T visit(ArrayLengthExpression arrayLengthExpression);
+
+    T visit(CastExpression castExpression);
+
+    T visit(InstanceOfExpression instanceOfExpression);
+
+    T visit(ThisExpression thisExpression);
+
 }

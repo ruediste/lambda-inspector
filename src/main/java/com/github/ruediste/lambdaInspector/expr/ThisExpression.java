@@ -1,9 +1,9 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class NewExpression extends ExpressionBase {
+public class ThisExpression extends ExpressionBase {
 
-    public NewExpression(Class<?> type) {
-        super(type);
+    public ThisExpression(Class<?> thisType) {
+        super(thisType);
     }
 
     @Override
@@ -13,6 +13,6 @@ public class NewExpression extends ExpressionBase {
 
     @Override
     public String toString() {
-        return "new " + type.getName() + "()";
+        return "this";
     }
 }

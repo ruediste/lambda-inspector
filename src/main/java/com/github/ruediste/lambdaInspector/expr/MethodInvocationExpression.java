@@ -2,23 +2,24 @@ package com.github.ruediste.lambdaInspector.expr;
 
 import static java.util.stream.Collectors.joining;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Objects;
 
-public class MethodInvocationExpression extends Expression {
+public class MethodInvocationExpression extends ExpressionBase {
 
-    public MethodInvocationExpression(Method method, Expression target, List<Expression> args) {
-        super(method.getReturnType());
+    public MethodInvocationExpression(Executable method, Expression target, List<ExpressionBase> args) {
+        super(method instanceof Method ? ((Method) method).getReturnType() : method.getDeclaringClass());
         this.method = method;
         this.target = target;
         this.args = args;
     }
 
-    public Method method;
+    public Executable method;
     public Expression target;
-    public List<Expression> args;
+    public List<ExpressionBase> args;
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {

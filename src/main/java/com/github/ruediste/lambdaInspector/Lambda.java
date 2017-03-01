@@ -1,7 +1,6 @@
 package com.github.ruediste.lambdaInspector;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
 import com.github.ruediste.lambdaInspector.expr.Expression;
 
@@ -12,8 +11,8 @@ public class Lambda {
     public Object this_;
     public Object[] captured;
     public Method implementationMethod;
-    public Type[] capturedTypes;
-    public Type[] argumentTypes;
+    public Class<?>[] capturedTypes;
+    public Class<?>[] argumentTypes;
     public Expression expression;
 
 }

@@ -2,7 +2,7 @@ package com.github.ruediste.lambdaInspector.expr;
 
 import java.util.Objects;
 
-public class ConstExpression extends Expression {
+public class ConstExpression extends ExpressionBase {
 
     public Object value;
 

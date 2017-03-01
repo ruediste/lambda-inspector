@@ -2,8 +2,8 @@ package com.github.ruediste.lambdaInspector;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,24 +25,35 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.analysis.Value;
 
+import com.github.ruediste.lambdaInspector.expr.ArgumentExpression;
+import com.github.ruediste.lambdaInspector.expr.ArrayLengthExpression;
+import com.github.ruediste.lambdaInspector.expr.CapturedArgExpression;
+import com.github.ruediste.lambdaInspector.expr.CastExpression;
 import com.github.ruediste.lambdaInspector.expr.ConstExpression;
 import com.github.ruediste.lambdaInspector.expr.Expression;
+import com.github.ruediste.lambdaInspector.expr.ExpressionBase;
 import com.github.ruediste.lambdaInspector.expr.GetFieldExpression;
+import com.github.ruediste.lambdaInspector.expr.InstanceOfExpression;
 import com.github.ruediste.lambdaInspector.expr.MethodInvocationExpression;
+import com.github.ruediste.lambdaInspector.expr.NewArrayExpression;
 import com.github.ruediste.lambdaInspector.expr.NewExpression;
 import com.github.ruediste.lambdaInspector.expr.ReturnAddressExpression;
+import com.github.ruediste.lambdaInspector.expr.ThisExpression;
+import com.github.ruediste.lambdaInspector.expr.UnaryExpression;
+import com.github.ruediste.lambdaInspector.expr.UnaryExpression.UnaryExpressionType;
 
 public class LambdaAnalyzer {
 
     private static class ExpressionValue implements Value {
 
-        Expression expr;
+        ExpressionBase expr;
         int size;
 
         public ExpressionValue(int size) {
@@ -50,7 +61,12 @@ public class LambdaAnalyzer {
 
         }
 
-        public ExpressionValue(int size, Expression expr) {
+        public ExpressionValue(ExpressionBase expr) {
+            this.size = Type.getType(expr.getType()).getSize();
+            this.expr = expr;
+        }
+
+        public ExpressionValue(int size, ExpressionBase expr) {
             this.size = size;
             this.expr = expr;
         }
@@ -114,50 +130,50 @@ public class LambdaAnalyzer {
             try {
                 switch (insn.getOpcode()) {
                 case ACONST_NULL:
-                    return new ExpressionValue(1, new ConstExpression(null, null));
+                    return new ExpressionValue(new ConstExpression(null, null));
                 case ICONST_M1:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, -1));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, -1));
                 case ICONST_0:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, 0));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, 0));
                 case ICONST_1:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, 1));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, 1));
                 case ICONST_2:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, 2));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, 2));
                 case ICONST_3:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, 3));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, 3));
                 case ICONST_4:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, 4));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, 4));
                 case ICONST_5:
-                    return new ExpressionValue(1, new ConstExpression(Integer.TYPE, 5));
+                    return new ExpressionValue(new ConstExpression(Integer.TYPE, 5));
                 case LCONST_0:
-                    return new ExpressionValue(2, new ConstExpression(Long.TYPE, 0));
+                    return new ExpressionValue(new ConstExpression(Long.TYPE, 0));
                 case LCONST_1:
-                    return new ExpressionValue(2, new ConstExpression(Long.TYPE, 1));
+                    return new ExpressionValue(new ConstExpression(Long.TYPE, 1));
                 case FCONST_0:
-                    return new ExpressionValue(1, new ConstExpression(Float.TYPE, Float.valueOf(0)));
+                    return new ExpressionValue(new ConstExpression(Float.TYPE, Float.valueOf(0)));
                 case FCONST_1:
-                    return new ExpressionValue(1, new ConstExpression(Float.TYPE, Float.valueOf(1)));
+                    return new ExpressionValue(new ConstExpression(Float.TYPE, Float.valueOf(1)));
                 case FCONST_2:
-                    return new ExpressionValue(1, new ConstExpression(Float.TYPE, Float.valueOf(2)));
+                    return new ExpressionValue(new ConstExpression(Float.TYPE, Float.valueOf(2)));
                 case DCONST_0:
-                    return new ExpressionValue(2, new ConstExpression(Float.TYPE, Double.valueOf(0)));
+                    return new ExpressionValue(new ConstExpression(Double.TYPE, Double.valueOf(0)));
                 case DCONST_1:
-                    return new ExpressionValue(2, new ConstExpression(Float.TYPE, Double.valueOf(1)));
+                    return new ExpressionValue(new ConstExpression(Double.TYPE, Double.valueOf(1)));
                 case BIPUSH:
                 case SIPUSH:
                     return new ExpressionValue(1, new ConstExpression(Integer.TYPE, ((IntInsnNode) insn).operand));
                 case LDC:
                     Object cst = ((LdcInsnNode) insn).cst;
                     if (cst instanceof Integer) {
-                        return new ExpressionValue(1, new ConstExpression(Integer.TYPE, cst));
+                        return new ExpressionValue(new ConstExpression(Integer.TYPE, cst));
                     } else if (cst instanceof Float) {
-                        return new ExpressionValue(1, new ConstExpression(Float.TYPE, cst));
+                        return new ExpressionValue(new ConstExpression(Float.TYPE, cst));
                     } else if (cst instanceof Long) {
-                        return new ExpressionValue(2, new ConstExpression(Long.TYPE, cst));
+                        return new ExpressionValue(new ConstExpression(Long.TYPE, cst));
                     } else if (cst instanceof Double) {
-                        return new ExpressionValue(2, new ConstExpression(Double.TYPE, cst));
+                        return new ExpressionValue(new ConstExpression(Double.TYPE, cst));
                     } else if (cst instanceof String) {
-                        return new ExpressionValue(1, new ConstExpression(String.class, cst));
+                        return new ExpressionValue(new ConstExpression(String.class, cst));
                     } else if (cst instanceof Type) {
                         int sort = ((Type) cst).getSort();
                         if (sort == Type.OBJECT || sort == Type.ARRAY) {
@@ -176,10 +192,9 @@ public class LambdaAnalyzer {
                     return new ExpressionValue(1, new ReturnAddressExpression());
                 case GETSTATIC: {
                     FieldInsnNode fieldInsn = (FieldInsnNode) insn;
-                    Type type = Type.getType(fieldInsn.desc);
                     Class<?> owner = LambdaInspector.loadClass(cl, Type.getObjectType(fieldInsn.owner));
                     Field field = owner.getDeclaredField(fieldInsn.name);
-                    return new ExpressionValue(type.getSize(), new GetFieldExpression(null, field));
+                    return new ExpressionValue(new GetFieldExpression(null, field));
                 }
                 case NEW: {
                     TypeInsnNode typeInsn = (TypeInsnNode) insn;
@@ -196,12 +211,143 @@ public class LambdaAnalyzer {
 
         @Override
         public ExpressionValue copyOperation(AbstractInsnNode insn, ExpressionValue value) throws AnalyzerException {
-            throw new UnsupportedOperationException();
+            ExpressionValue result = value;
+            if (insn.getOpcode() == ALOAD) {
+                if (value.expr == null) {
+                    VarInsnNode varInsn = (VarInsnNode) insn;
+                    int argIdx = varInsn.var;
+                    if (argIdx == 0 && lambda.this_ != null) {
+                        result = new ExpressionValue(
+                                new ThisExpression(lambda.implementationMethod.getDeclaringClass()));
+                    } else {
+                        if (lambda.this_ != null)
+                            argIdx--;
+                        if (argIdx < lambda.capturedTypes.length) {
+                            Class<?> argCls = lambda.capturedTypes[argIdx];
+                            Type argType = Type.getType(argCls);
+                            result = new ExpressionValue(argType.getSize(), new CapturedArgExpression(argCls, argIdx));
+                        } else {
+                            argIdx -= lambda.capturedTypes.length;
+                            Class<?> argCls = lambda.argumentTypes[argIdx];
+                            Type argType = Type.getType(argCls);
+                            result = new ExpressionValue(argType.getSize(), new ArgumentExpression(argCls, argIdx));
+                        }
+                    }
+                }
+            }
+            setExpressionValue(insn, result);
+            return result;
         }
 
         @Override
         public ExpressionValue unaryOperation(AbstractInsnNode insn, ExpressionValue value) throws AnalyzerException {
-            throw new UnsupportedOperationException();
+            try {
+                ExpressionValue result;
+                UnaryExpressionType unaryType = UnaryExpressionType.getTypeByOpcode(insn.getOpcode());
+                if (unaryType != null) {
+                    result = new ExpressionValue(Type.getType(unaryType.getResultType()).getSize(),
+                            new UnaryExpression(unaryType, value.expr));
+                } else
+                    switch (insn.getOpcode()) {
+                    case IFEQ:
+                    case IFNE:
+                    case IFLT:
+                    case IFGE:
+                    case IFGT:
+                    case IFLE:
+                    case TABLESWITCH:
+                    case LOOKUPSWITCH:
+                    case IRETURN:
+                    case LRETURN:
+                    case FRETURN:
+                    case DRETURN:
+                    case ARETURN:
+                    case PUTSTATIC:
+                    case MONITORENTER:
+                    case MONITOREXIT:
+                    case IFNULL:
+                    case IFNONNULL:
+                        setExpressionValue(insn, value);
+                        return null;
+                    case GETFIELD: {
+                        FieldInsnNode fieldInsn = (FieldInsnNode) insn;
+                        Type type = Type.getType(fieldInsn.desc);
+                        Field field = LambdaInspector.loadClass(cl, Type.getObjectType(fieldInsn.owner))
+                                .getDeclaredField(fieldInsn.name);
+                        result = new ExpressionValue(type.getSize(), new GetFieldExpression(value.expr, field));
+                        break;
+                    }
+                    case NEWARRAY: {
+                        Class<?> arrayType;
+                        switch (((IntInsnNode) insn).operand) {
+                        case T_BOOLEAN:
+                            arrayType = Class.forName("[Z");
+                            break;
+                        case T_CHAR:
+                            arrayType = Class.forName("[C");
+                            break;
+                        case T_BYTE:
+                            arrayType = Class.forName("[B");
+                            break;
+                        case T_SHORT:
+                            arrayType = Class.forName("[S");
+                            break;
+                        case T_INT:
+                            arrayType = Class.forName("[I");
+                            break;
+                        case T_FLOAT:
+                            arrayType = Class.forName("[F");
+                            break;
+                        case T_DOUBLE:
+                            arrayType = Class.forName("[D");
+                            break;
+                        case T_LONG:
+                            arrayType = Class.forName("[J");
+                            break;
+                        default:
+                            throw new AnalyzerException(insn, "Invalid array type");
+                        }
+                        result = new ExpressionValue(1, new NewArrayExpression(arrayType, value.expr, false));
+                        break;
+                    }
+                    case ANEWARRAY: {
+                        String desc = ((TypeInsnNode) insn).desc;
+                        Type type = Type.getObjectType(desc);
+                        result = new ExpressionValue(1, new NewArrayExpression(
+                                Class.forName("[L" + type.getClassName() + ";"), value.expr, false));
+                        break;
+                    }
+                    case ARRAYLENGTH:
+                        result = new ExpressionValue(new ArrayLengthExpression(value.expr));
+                        break;
+                    case ATHROW:
+                        setExpressionValue(insn, value);
+                        return null;
+                    case CHECKCAST: {
+                        String desc = ((TypeInsnNode) insn).desc;
+                        Type type = Type.getObjectType(desc);
+                        result = new ExpressionValue(
+                                new CastExpression(LambdaInspector.loadClass(cl, type), value.expr));
+                        break;
+                    }
+                    case INSTANCEOF: {
+                        String desc = ((TypeInsnNode) insn).desc;
+                        Type type = Type.getObjectType(desc);
+                        result = new ExpressionValue(
+                                new InstanceOfExpression(value.expr, LambdaInspector.loadClass(cl, type)));
+                        break;
+
+                    }
+                    default:
+                        throw new Error("Internal error.");
+                    }
+                setExpressionValue(insn, result);
+                return result;
+            } catch (AnalyzerException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new AnalyzerException(insn, "Error occurred", e);
+            }
         }
 
         @Override
@@ -232,9 +378,13 @@ public class LambdaAnalyzer {
                     Class<?> owner = LambdaInspector.loadClass(cl, Type.getObjectType(methodInsn.owner));
                     Type methodType = Type.getMethodType(methodInsn.desc);
                     Class<?>[] argTypes = LambdaInspector.getArgumentTypes(cl, methodType);
-                    Method method = owner.getDeclaredMethod(methodInsn.name, argTypes);
+                    Executable method;
+                    if ("<init>".equals(methodInsn.name)) {
+                        method = owner.getDeclaredConstructor(argTypes);
+                    } else
+                        method = owner.getDeclaredMethod(methodInsn.name, argTypes);
                     boolean isStatic = Modifier.isStatic(method.getModifiers());
-                    List<Expression> args = new ArrayList<>();
+                    List<ExpressionBase> args = new ArrayList<>();
                     Expression target = null;
                     int idx = 0;
                     if (!isStatic)
@@ -245,17 +395,20 @@ public class LambdaAnalyzer {
                             new MethodInvocationExpression(method, target, args));
                 }
             } catch (Exception e) {
-                throw new RuntimeException();
+                throw new RuntimeException(e);
             }
-            expressions[instructions.indexOf(insn)] = result;
+            setExpressionValue(insn, result);
             return result;
+        }
+
+        private void setExpressionValue(AbstractInsnNode insn, ExpressionValue result) {
+            expressions[instructions.indexOf(insn)] = result;
         }
 
         @Override
         public void returnOperation(AbstractInsnNode insn, ExpressionValue value, ExpressionValue expected)
                 throws AnalyzerException {
-            throw new UnsupportedOperationException();
-
+            // NOP
         }
 
         @Override
@@ -284,11 +437,11 @@ public class LambdaAnalyzer {
     }
 
     public Expression analyze(Lambda lambda) {
-        return new ImplMethodParser<Expression>() {
+        return new ImplMethodParser<ExpressionBase>() {
 
             @Override
             public MethodVisitor visitImpl(String owner, int access, String name, String desc, String signature,
-                    String[] exceptions, Consumer<Expression> resultConsumer) {
+                    String[] exceptions, Consumer<ExpressionBase> resultConsumer) {
 
                 MethodNode node = new MethodNode(access, name, desc, signature, exceptions);
                 return new MethodVisitor(Opcodes.ASM5, node) {
@@ -314,18 +467,27 @@ public class LambdaAnalyzer {
                                 Node<ExpressionValue> dstNode = (Node<ExpressionValue>) getFrames()[dst];
                                 srcNode.successors.add(dst);
                                 dstNode.predecessors.add(src);
+
                             }
+
                         };
+
                         try {
+                            List<ExpressionBase> results = new ArrayList<>();
                             Frame<ExpressionValue>[] frames = a.analyze(owner, node);
                             for (int i = 0; i < frames.length; i++) {
                                 Frame<ExpressionValue> frame = frames[i];
+                                if (frame == null)
+                                    continue;
                                 Node<ExpressionValue> fNode = (Node<ExpressionValue>) frame;
                                 int idx = i;
                                 if (fNode.successors.isEmpty()) {
                                     while (true) {
-                                        if (expressions[idx] != null)
-                                            resultConsumer.accept(expressions[idx].expr);
+                                        if (expressions[idx] != null) {
+                                            results.add(expressions[idx].expr);
+                                            break;
+                                        }
+
                                         if (fNode.predecessors.size() != 1)
                                             break;
                                         idx = fNode.predecessors.iterator().next();
@@ -334,6 +496,8 @@ public class LambdaAnalyzer {
 
                                 }
                             }
+                            if (results.size() == 1)
+                                resultConsumer.accept(results.get(0));
                         } catch (AnalyzerException e) {
                             throw new RuntimeException(e);
                         }

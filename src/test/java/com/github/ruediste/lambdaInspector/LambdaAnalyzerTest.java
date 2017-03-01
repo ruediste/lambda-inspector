@@ -2,12 +2,22 @@ package com.github.ruediste.lambdaInspector;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.github.ruediste.lambdaInspector.expr.Expression;
 
 public class LambdaAnalyzerTest {
+
+    private Integer foo;
+
+    private String bar() {
+        return "bar";
+    }
 
     @BeforeClass
     public static void beforeClass() {
@@ -16,9 +26,61 @@ public class LambdaAnalyzerTest {
 
     @Test
     public void testSimpe() {
-        Expression expr = LambdaInspector.inspect((Runnable) () -> {
+        assertEquals("java.lang.System.out.println(\"Hello World\")", this.<Runnable>inspect(() -> {
             System.out.println("Hello World");
-        }).expression;
-        assertEquals("java.lang.System.out.println(\"Hello World\")", expr.toString());
+        }));
+    }
+
+    @Test
+    public void testArg() {
+        assertEquals("java.lang.System.out.println(arg$0)", this.<Consumer<String>>inspect(s -> {
+            System.out.println(s);
+        }));
+    }
+
+    @Test
+    public void testCaptured() {
+        String foo = "foo";
+
+        assertEquals("java.lang.System.out.println(cap$0)", this.<Runnable>inspect(() -> {
+            System.out.println(foo);
+        }));
+    }
+
+    @Test
+    public void testConstantReturn() {
+        assertEquals("\"foo\"", this.<Supplier<String>>inspect(() -> "foo"));
+        assertEquals("java.lang.Integer.valueOf(1)", this.<Supplier<Integer>>inspect(() -> 1));
+        assertEquals("java.lang.Long.valueOf(1)", this.<Supplier<Long>>inspect(() -> 1L));
+    }
+
+    @Test
+    public void testThisReferences() {
+        Integer i = 0;
+        assertEquals("this.foo", this.<Supplier<Integer>>inspect(() -> foo));
+        assertEquals("cap$0", this.<Supplier<Integer>>inspect(() -> {
+            foo.byteValue();
+            return i;
+        }));
+        assertEquals("cap$0", this.<Function<String, Integer>>inspect(s -> {
+            foo.byteValue();
+            return i;
+        }));
+        assertEquals("arg$0", this.<Function<String, String>>inspect(s -> {
+            foo.byteValue();
+            return s;
+        }));
+    }
+
+    @Test
+    public void createArrayType() throws ClassNotFoundException {
+        assertEquals(String.class, Class.forName("[Ljava.lang.String;").getComponentType());
+    }
+
+    private <T> String inspect(T lambda) {
+        Expression expr = LambdaInspector.inspect(lambda).expression;
+        if (expr == null)
+            return null;
+        return expr.toString();
     }
 }

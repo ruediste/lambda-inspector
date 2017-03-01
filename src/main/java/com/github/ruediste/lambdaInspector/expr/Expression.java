@@ -1,15 +1,9 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-/**
- * Base class for expressions
- */
-public abstract class Expression {
+public interface Expression {
 
-    public Class<?> type;
+    Class<?> getType();
 
-    public Expression(Class<?> type) {
-        this.type = type;
-    }
+    <T> T accept(ExpressionVisitor<T> visitor);
 
-    public abstract <T> T accept(ExpressionVisitor<T> visitor);
 }
