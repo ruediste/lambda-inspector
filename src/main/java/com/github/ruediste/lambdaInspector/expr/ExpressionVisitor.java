@@ -29,4 +29,10 @@ public interface ExpressionVisitor<T> {
 
     T visit(ThisExpression thisExpression);
 
+    T visit(ArrayLoadExpression arrayLoadExpression);
+
+    T visit(BinaryArithmeticExpression binaryArithmeticExpression);
+
+    T visit(UnknownExpression unknownExpression);
+
 }

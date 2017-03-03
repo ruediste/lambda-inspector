@@ -55,6 +55,39 @@ public class LambdaAnalyzerTest {
     }
 
     @Test
+    public void testArrayReturn() {
+        assertEquals("new int[1]", this.<Supplier<int[]>>inspect(() -> {
+            return new int[] { 2 };
+        }));
+
+    }
+
+    @Test
+    public void testControl() {
+        assertEquals(null, this.<Supplier<Integer>>inspect(() -> {
+            if (foo == 1)
+                return 1;
+            else
+                return 2;
+        }));
+        assertEquals("<UNKNOWN>", this.<Supplier<Integer>>inspect(() -> {
+            int tmp;
+            if (foo == 1)
+                tmp = 1;
+            else
+                tmp = 2;
+            return tmp;
+        }));
+        assertEquals("<UNKNOWN>", this.<Supplier<String>>inspect(() -> {
+            String tmp = "bar";
+            while (foo == 4)
+                tmp = "foo";
+            return tmp;
+        }));
+
+    }
+
+    @Test
     public void testThisReferences() {
         Integer i = 0;
         assertEquals("this.foo", this.<Supplier<Integer>>inspect(() -> foo));

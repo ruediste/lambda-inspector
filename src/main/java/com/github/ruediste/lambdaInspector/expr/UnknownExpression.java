@@ -1,12 +1,9 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class ArgumentExpression extends ExpressionBase {
+public class UnknownExpression extends ExpressionBase {
 
-    private int index;
-
-    public ArgumentExpression(Class<?> type, int index) {
+    public UnknownExpression(Class<?> type) {
         super(type);
-        this.index = index;
     }
 
     @Override
@@ -16,7 +13,6 @@ public class ArgumentExpression extends ExpressionBase {
 
     @Override
     public String toString() {
-        return "arg$" + index;
+        return "<UNKNOWN>";
     }
-
 }

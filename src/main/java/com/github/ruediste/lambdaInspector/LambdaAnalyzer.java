@@ -8,6 +8,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -34,6 +35,9 @@ import org.objectweb.asm.tree.analysis.Value;
 
 import com.github.ruediste.lambdaInspector.expr.ArgumentExpression;
 import com.github.ruediste.lambdaInspector.expr.ArrayLengthExpression;
+import com.github.ruediste.lambdaInspector.expr.ArrayLoadExpression;
+import com.github.ruediste.lambdaInspector.expr.BinaryArithmeticExpression;
+import com.github.ruediste.lambdaInspector.expr.BinaryArithmeticExpression.ArithmeticOperation;
 import com.github.ruediste.lambdaInspector.expr.CapturedArgExpression;
 import com.github.ruediste.lambdaInspector.expr.CastExpression;
 import com.github.ruediste.lambdaInspector.expr.ConstExpression;
@@ -48,12 +52,13 @@ import com.github.ruediste.lambdaInspector.expr.ReturnAddressExpression;
 import com.github.ruediste.lambdaInspector.expr.ThisExpression;
 import com.github.ruediste.lambdaInspector.expr.UnaryExpression;
 import com.github.ruediste.lambdaInspector.expr.UnaryExpression.UnaryExpressionType;
+import com.github.ruediste.lambdaInspector.expr.UnknownExpression;
 
 public class LambdaAnalyzer {
 
     private static class ExpressionValue implements Value {
 
-        ExpressionBase expr;
+        Expression expr;
         int size;
 
         public ExpressionValue(int size) {
@@ -61,7 +66,7 @@ public class LambdaAnalyzer {
 
         }
 
-        public ExpressionValue(ExpressionBase expr) {
+        public ExpressionValue(Expression expr) {
             this.size = Type.getType(expr.getType()).getSize();
             this.expr = expr;
         }
@@ -81,23 +86,23 @@ public class LambdaAnalyzer {
             return "(" + size + ":" + expr + ")";
         }
 
-        // @Override
-        // public boolean equals(Object obj) {
-        // if (this == obj)
-        // return true;
-        // if (obj == null)
-        // return false;
-        // if (!obj.getClass().equals(getClass())) {
-        // return false;
-        // }
-        // ExpressionValue other = (ExpressionValue) obj;
-        // return size == other.size;
-        // }
-        //
-        // @Override
-        // public int hashCode() {
-        // return size;
-        // }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (!obj.getClass().equals(getClass())) {
+                return false;
+            }
+            ExpressionValue other = (ExpressionValue) obj;
+            return size == other.size && Objects.equals(expr, other.expr);
+        }
+
+        @Override
+        public int hashCode() {
+            return size;
+        }
 
     }
 
@@ -353,13 +358,57 @@ public class LambdaAnalyzer {
         @Override
         public ExpressionValue binaryOperation(AbstractInsnNode insn, ExpressionValue value1, ExpressionValue value2)
                 throws AnalyzerException {
-            throw new UnsupportedOperationException();
+            Expression result;
+            ArithmeticOperation op = BinaryArithmeticExpression.ArithmeticOperation.byOpcode(insn.getOpcode());
+            if (op != null) {
+                result = new BinaryArithmeticExpression(op, value1.expr, value2.expr);
+            } else
+                switch (insn.getOpcode()) {
+                case IALOAD:
+                case BALOAD:
+                case CALOAD:
+                case SALOAD:
+                case LALOAD:
+                case DALOAD:
+                case FALOAD:
+                case AALOAD:
+                    result = new ArrayLoadExpression(value1.expr, value2.expr);
+                    break;
+                case IF_ICMPEQ:
+                case IF_ICMPNE:
+                case IF_ICMPLT:
+                case IF_ICMPGE:
+                case IF_ICMPGT:
+                case IF_ICMPLE:
+                case IF_ACMPEQ:
+                case IF_ACMPNE:
+                case PUTFIELD:
+                    return null;
+                default:
+                    throw new Error("Internal error.");
+                }
+
+            ExpressionValue expr = new ExpressionValue(result);
+            setExpressionValue(insn, expr);
+            return expr;
         }
 
         @Override
         public ExpressionValue ternaryOperation(AbstractInsnNode insn, ExpressionValue value1, ExpressionValue value2,
                 ExpressionValue value3) throws AnalyzerException {
-            throw new UnsupportedOperationException();
+            switch (insn.getOpcode()) {
+            case IASTORE:
+            case LASTORE:
+            case FASTORE:
+            case DASTORE:
+            case AASTORE:
+            case BASTORE:
+            case CASTORE:
+            case SASTORE:
+                return null;
+            default:
+                throw new UnsupportedOperationException("Illegal opcode " + insn.getOpcode());
+            }
         }
 
         @Override
@@ -384,7 +433,7 @@ public class LambdaAnalyzer {
                     } else
                         method = owner.getDeclaredMethod(methodInsn.name, argTypes);
                     boolean isStatic = Modifier.isStatic(method.getModifiers());
-                    List<ExpressionBase> args = new ArrayList<>();
+                    List<Expression> args = new ArrayList<>();
                     Expression target = null;
                     int idx = 0;
                     if (!isStatic)
@@ -413,7 +462,12 @@ public class LambdaAnalyzer {
 
         @Override
         public ExpressionValue merge(ExpressionValue v, ExpressionValue w) {
-            throw new UnsupportedOperationException();
+            if (v.expr != null) {
+                return new ExpressionValue(v.size, new UnknownExpression(v.expr.getType()));
+            } else if (w.expr != null) {
+                return new ExpressionValue(w.size, new UnknownExpression(w.expr.getType()));
+            } else
+                return new ExpressionValue(v.size, null);
         }
 
     }
@@ -437,11 +491,11 @@ public class LambdaAnalyzer {
     }
 
     public Expression analyze(Lambda lambda) {
-        return new ImplMethodParser<ExpressionBase>() {
+        return new ImplMethodParser<Expression>() {
 
             @Override
             public MethodVisitor visitImpl(String owner, int access, String name, String desc, String signature,
-                    String[] exceptions, Consumer<ExpressionBase> resultConsumer) {
+                    String[] exceptions, Consumer<Expression> resultConsumer) {
 
                 MethodNode node = new MethodNode(access, name, desc, signature, exceptions);
                 return new MethodVisitor(Opcodes.ASM5, node) {
@@ -473,7 +527,7 @@ public class LambdaAnalyzer {
                         };
 
                         try {
-                            List<ExpressionBase> results = new ArrayList<>();
+                            List<Expression> results = new ArrayList<>();
                             Frame<ExpressionValue>[] frames = a.analyze(owner, node);
                             for (int i = 0; i < frames.length; i++) {
                                 Frame<ExpressionValue> frame = frames[i];

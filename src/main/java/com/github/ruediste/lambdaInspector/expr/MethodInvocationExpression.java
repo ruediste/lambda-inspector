@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class MethodInvocationExpression extends ExpressionBase {
 
-    public MethodInvocationExpression(Executable method, Expression target, List<ExpressionBase> args) {
+    public MethodInvocationExpression(Executable method, Expression target, List<Expression> args) {
         super(method instanceof Method ? ((Method) method).getReturnType() : method.getDeclaringClass());
         this.method = method;
         this.target = target;
@@ -19,7 +19,7 @@ public class MethodInvocationExpression extends ExpressionBase {
 
     public Executable method;
     public Expression target;
-    public List<ExpressionBase> args;
+    public List<Expression> args;
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {

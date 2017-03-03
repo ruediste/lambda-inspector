@@ -6,4 +6,9 @@ public interface Expression {
 
     <T> T accept(ExpressionVisitor<T> visitor);
 
+    @Override
+    boolean equals(Object obj);
+
+    @Override
+    int hashCode();
 }
