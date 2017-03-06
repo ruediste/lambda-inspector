@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.github.ruediste.lambdaInspector.expr.Expression;
 
-public class LambdaAnalyzerTest {
+public class LambdaExpressionAnalyzerTest {
 
     private Integer foo;
 
@@ -111,7 +111,7 @@ public class LambdaAnalyzerTest {
     }
 
     private <T> String inspect(T lambda) {
-        Expression expr = LambdaInspector.inspect(lambda).expression;
+        Expression expr = LambdaInspector.inspect(lambda).stat.expression;
         if (expr == null)
             return null;
         return expr.toString();

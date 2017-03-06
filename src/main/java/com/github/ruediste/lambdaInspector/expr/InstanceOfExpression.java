@@ -1,9 +1,9 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class InstanceOfExpression extends ExpressionBase {
+public class InstanceOfExpression extends Expression {
 
-    private final Expression expr;
-    private final Class<?> queryType;
+    public final Expression expr;
+    public final Class<?> queryType;
 
     public InstanceOfExpression(Expression expr, Class<?> queryType) {
         super(Boolean.TYPE);
@@ -14,14 +14,6 @@ public class InstanceOfExpression extends ExpressionBase {
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    public Expression getExpr() {
-        return expr;
-    }
-
-    public Class<?> getQueryType() {
-        return queryType;
     }
 
     @Override

@@ -2,10 +2,10 @@ package com.github.ruediste.lambdaInspector.expr;
 
 import org.objectweb.asm.Opcodes;
 
-public class UnaryExpression extends ExpressionBase {
+public class UnaryExpression extends Expression {
 
-    private final Expression argument;
-    private final UnaryExpressionType type;
+    public final Expression argument;
+    public final UnaryExpressionType type;
 
     public enum UnaryExpressionType {
         INEG(Integer.TYPE, Opcodes.INEG) {

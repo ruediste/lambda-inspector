@@ -46,21 +46,23 @@ public class LambdaInspector {
         LambdaInspector.bytecodeLoader = bytecodeLoader;
     }
 
-    private static LambdaAnalyzer analyzer = new LambdaAnalyzer();
-
+    /**
+     * Inspect lambda with expression parsing and caching
+     */
     public static Lambda inspect(Object lambda) {
+        LambdaStatic stat = inspectStatic(lambda);
+        return inspect(lambda, stat);
+    }
+
+    /**
+     * Inspect lambda without caching
+     */
+    public static Lambda inspect(Object lambda, LambdaStatic stat) {
         try {
             Lambda result = new Lambda();
-            LambdaInformation info = lambda.getClass().getAnnotation(LambdaInformation.class);
-            ClassLoader cl = info.implMethodClass().getClassLoader();
-
-            Class<?>[] samArgTypes = getArgumentTypes(cl, Type.getMethodType(info.samMethodDesc()));
-            Class<?>[] implArgTypes = getArgumentTypes(cl, Type.getMethodType(info.implMethodDesc()));
-            result.implementationMethod = info.implMethodClass().getDeclaredMethod(info.implMethodName(), implArgTypes);
-            boolean implStatic = Modifier.isStatic(result.implementationMethod.getModifiers());
-            result.argumentTypes = samArgTypes;
-            result.capturedTypes = Arrays.copyOfRange(implArgTypes, 0, implArgTypes.length - samArgTypes.length);
-            result.captured = new Object[result.capturedTypes.length];
+            result.stat = stat;
+            boolean implStatic = Modifier.isStatic(inspectStatic(lambda).implementationMethod.getModifiers());
+            result.captured = new Object[inspectStatic(lambda).capturedTypes.length];
             {
                 int offset = implStatic ? 0 : 1;
                 for (int i = 0; i < result.captured.length + offset; i++) {
@@ -74,8 +76,45 @@ public class LambdaInspector {
                         result.captured[i - offset] = value;
                 }
             }
-            result.expression = analyzer.analyze(result);
+            if (stat.propertyInfo != null) {
+                result.property = result.new LambdaPropertyHandle(stat.propertyInfo);
+            }
             return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static LambdaExpressionAnalyzer analyzer = new LambdaExpressionAnalyzer();
+    private static LambdaPropertyAnalyzer propertyAnalyzer = new LambdaPropertyAnalyzer();
+
+    /**
+     * Inspect static lambda with caching and expression parsing
+     */
+    public static LambdaStatic inspectStatic(Object lambda) {
+        // TODO: cache result
+        LambdaStatic stat = inspectStaticNoExpression(lambda);
+        stat.expression = analyzer.analyze(stat);
+        stat.propertyInfo = propertyAnalyzer.analyze(stat);
+        return stat;
+
+    }
+
+    /**
+     * Inspect lambda, non-cached, no expression parsing
+     */
+    public static LambdaStatic inspectStaticNoExpression(Object lambda) {
+        try {
+            LambdaInformation info = lambda.getClass().getAnnotation(LambdaInformation.class);
+            ClassLoader cl = info.implMethodClass().getClassLoader();
+
+            LambdaStatic stat = new LambdaStatic();
+            Class<?>[] samArgTypes = getArgumentTypes(cl, Type.getMethodType(info.samMethodDesc()));
+            Class<?>[] implArgTypes = getArgumentTypes(cl, Type.getMethodType(info.implMethodDesc()));
+            stat.implementationMethod = info.implMethodClass().getDeclaredMethod(info.implMethodName(), implArgTypes);
+            stat.argumentTypes = samArgTypes;
+            stat.capturedTypes = Arrays.copyOfRange(implArgTypes, 0, implArgTypes.length - samArgTypes.length);
+            return stat;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

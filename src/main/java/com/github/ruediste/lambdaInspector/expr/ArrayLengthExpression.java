@@ -1,8 +1,8 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class ArrayLengthExpression extends ExpressionBase {
+public class ArrayLengthExpression extends Expression {
 
-    private final Expression array;
+    public final Expression array;
 
     public ArrayLengthExpression(Expression array) {
         super(Integer.TYPE);
@@ -12,10 +12,6 @@ public class ArrayLengthExpression extends ExpressionBase {
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    public Expression getArray() {
-        return array;
     }
 
     @Override

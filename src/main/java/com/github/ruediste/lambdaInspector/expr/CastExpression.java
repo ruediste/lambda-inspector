@@ -1,8 +1,8 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class CastExpression extends ExpressionBase {
+public class CastExpression extends Expression {
 
-    private final Expression expr;
+    public final Expression expr;
 
     public CastExpression(Class<?> targetType, Expression expr) {
         super(targetType);
@@ -12,10 +12,6 @@ public class CastExpression extends ExpressionBase {
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    public Expression getExpr() {
-        return expr;
     }
 
     @Override

@@ -1,8 +1,6 @@
 package com.github.ruediste.lambdaInspector;
 
-import java.lang.reflect.Method;
-
-import com.github.ruediste.lambdaInspector.expr.Expression;
+import com.github.ruediste.lambdaInspector.LambdaStatic.LambdaPropertyInfo;
 
 /**
  * Represents information on a lambda expression
@@ -10,9 +8,20 @@ import com.github.ruediste.lambdaInspector.expr.Expression;
 public class Lambda {
     public Object this_;
     public Object[] captured;
-    public Method implementationMethod;
-    public Class<?>[] capturedTypes;
-    public Class<?>[] argumentTypes;
-    public Expression expression;
 
+    public LambdaStatic stat;
+
+    public LambdaPropertyHandle property;
+
+    public class LambdaPropertyHandle {
+        public LambdaPropertyInfo info;
+
+        public LambdaPropertyHandle(LambdaPropertyInfo propertyInfo) {
+            info = propertyInfo;
+        }
+
+        public Object getBase(Object... args) {
+            return info.getBase(Lambda.this, args);
+        }
+    }
 }

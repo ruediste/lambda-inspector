@@ -1,6 +1,6 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class CapturedArgExpression extends ExpressionBase {
+public class CapturedArgExpression extends Expression {
 
     private int index;
 

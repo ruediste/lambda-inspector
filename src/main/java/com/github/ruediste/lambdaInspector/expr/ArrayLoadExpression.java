@@ -1,6 +1,6 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class ArrayLoadExpression extends ExpressionBase {
+public class ArrayLoadExpression extends Expression {
 
     public final Expression array;
     public final Expression index;

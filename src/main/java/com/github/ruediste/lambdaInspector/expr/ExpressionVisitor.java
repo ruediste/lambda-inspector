@@ -1,7 +1,6 @@
 package com.github.ruediste.lambdaInspector.expr;
 
 public interface ExpressionVisitor<T> {
-    // T visit(Expression expr);
 
     T visit(MethodInvocationExpression expr);
 

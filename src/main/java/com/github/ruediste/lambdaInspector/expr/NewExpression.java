@@ -1,6 +1,6 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class NewExpression extends ExpressionBase {
+public class NewExpression extends Expression {
 
     public NewExpression(Class<?> type) {
         super(type);

@@ -10,8 +10,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -42,7 +43,6 @@ import com.github.ruediste.lambdaInspector.expr.CapturedArgExpression;
 import com.github.ruediste.lambdaInspector.expr.CastExpression;
 import com.github.ruediste.lambdaInspector.expr.ConstExpression;
 import com.github.ruediste.lambdaInspector.expr.Expression;
-import com.github.ruediste.lambdaInspector.expr.ExpressionBase;
 import com.github.ruediste.lambdaInspector.expr.GetFieldExpression;
 import com.github.ruediste.lambdaInspector.expr.InstanceOfExpression;
 import com.github.ruediste.lambdaInspector.expr.MethodInvocationExpression;
@@ -54,7 +54,7 @@ import com.github.ruediste.lambdaInspector.expr.UnaryExpression;
 import com.github.ruediste.lambdaInspector.expr.UnaryExpression.UnaryExpressionType;
 import com.github.ruediste.lambdaInspector.expr.UnknownExpression;
 
-public class LambdaAnalyzer {
+public class LambdaExpressionAnalyzer {
 
     private static class ExpressionValue implements Value {
 
@@ -71,7 +71,7 @@ public class LambdaAnalyzer {
             this.expr = expr;
         }
 
-        public ExpressionValue(int size, ExpressionBase expr) {
+        public ExpressionValue(int size, Expression expr) {
             this.size = size;
             this.expr = expr;
         }
@@ -108,12 +108,12 @@ public class LambdaAnalyzer {
 
     private static class ExpressionInterpreter extends Interpreter<ExpressionValue> implements Opcodes {
 
-        private Lambda lambda;
+        private LambdaStatic lambda;
         private ClassLoader cl;
         private ExpressionValue[] expressions;
         private InsnList instructions;
 
-        protected ExpressionInterpreter(Lambda lambda, ExpressionValue[] expressions, InsnList instructions) {
+        protected ExpressionInterpreter(LambdaStatic lambda, ExpressionValue[] expressions, InsnList instructions) {
             super(Opcodes.ASM5);
             this.lambda = lambda;
             this.expressions = expressions;
@@ -221,11 +221,12 @@ public class LambdaAnalyzer {
                 if (value.expr == null) {
                     VarInsnNode varInsn = (VarInsnNode) insn;
                     int argIdx = varInsn.var;
-                    if (argIdx == 0 && lambda.this_ != null) {
+                    boolean isStatic = Modifier.isStatic(lambda.implementationMethod.getModifiers());
+                    if (argIdx == 0 && !isStatic) {
                         result = new ExpressionValue(
                                 new ThisExpression(lambda.implementationMethod.getDeclaringClass()));
                     } else {
-                        if (lambda.this_ != null)
+                        if (!isStatic)
                             argIdx--;
                         if (argIdx < lambda.capturedTypes.length) {
                             Class<?> argCls = lambda.capturedTypes[argIdx];
@@ -490,13 +491,28 @@ public class LambdaAnalyzer {
         }
     }
 
-    public Expression analyze(Lambda lambda) {
-        return new ImplMethodParser<Expression>() {
+    private class LambdaImplClassVisitor extends ClassVisitor {
+        private LambdaStatic lambda;
 
-            @Override
-            public MethodVisitor visitImpl(String owner, int access, String name, String desc, String signature,
-                    String[] exceptions, Consumer<Expression> resultConsumer) {
+        Expression result;
 
+        private String owner;
+
+        public LambdaImplClassVisitor(LambdaStatic lambda) {
+            super(Opcodes.ASM5);
+            this.lambda = lambda;
+        }
+
+        @Override
+        public void visit(int version, int access, String name, String signature, String superName,
+                String[] interfaces) {
+            this.owner = name;
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            if (lambda.implementationMethod.getName().equals(name)
+                    && Type.getMethodDescriptor(lambda.implementationMethod).equals(desc)) {
                 MethodNode node = new MethodNode(access, name, desc, signature, exceptions);
                 return new MethodVisitor(Opcodes.ASM5, node) {
                     @Override
@@ -551,14 +567,24 @@ public class LambdaAnalyzer {
                                 }
                             }
                             if (results.size() == 1)
-                                resultConsumer.accept(results.get(0));
+                                result = results.get(0);
                         } catch (AnalyzerException e) {
                             throw new RuntimeException(e);
                         }
-                    };
+                    }
                 };
             }
-        }.parse(lambda);
+            return null;
+        }
+
+    }
+
+    public Expression analyze(LambdaStatic lambda) {
+        ClassReader cr = new ClassReader(
+                LambdaInspector.getBytecodeLoader().apply(lambda.implementationMethod.getDeclaringClass()));
+        LambdaImplClassVisitor cv = new LambdaImplClassVisitor(lambda);
+        cr.accept(cv, 0);
+        return cv.result;
     }
 
 }

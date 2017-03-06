@@ -1,6 +1,6 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class ReturnAddressExpression extends ExpressionBase {
+public class ReturnAddressExpression extends Expression {
 
     public ReturnAddressExpression() {
         super(null);

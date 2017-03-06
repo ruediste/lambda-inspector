@@ -1,9 +1,9 @@
 package com.github.ruediste.lambdaInspector.expr;
 
-public class NewArrayExpression extends ExpressionBase {
+public class NewArrayExpression extends Expression {
 
-    private final boolean isMultiDimensional;
-    private final Expression length;
+    public final boolean isMultiDimensional;
+    public final Expression length;
 
     public NewArrayExpression(Class<?> arrayType, Expression length, boolean isMultiDimensional) {
         super(arrayType);

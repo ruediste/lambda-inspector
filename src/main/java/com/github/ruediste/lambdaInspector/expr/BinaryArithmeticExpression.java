@@ -2,7 +2,7 @@ package com.github.ruediste.lambdaInspector.expr;
 
 import org.objectweb.asm.Opcodes;
 
-public class BinaryArithmeticExpression extends ExpressionBase {
+public class BinaryArithmeticExpression extends Expression {
 
     public final Expression exp1;
     public final Expression exp2;
