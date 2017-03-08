@@ -9,16 +9,245 @@ public class BinaryArithmeticExpression extends Expression {
     public final ArithmeticOperation op;
 
     public enum ArithmeticOperation implements Opcodes {
-        ADD("+", IADD, FADD, LADD, DADD), SUB("-", ISUB, FSUB, LSUB, DSUB), MUL("*", IMUL, FMUL, LMUL, DMUL),
+        ADD("+", IADD, FADD, LADD, DADD) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) + ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) + ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) + ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) + ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) + ((Character) arg2);
+                } else if (arg1 instanceof Double) {
+                    return ((Double) arg1) + ((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1) + ((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        SUB("-", ISUB, FSUB, LSUB, DSUB) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) - ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) - ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) - ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) - ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) - ((Character) arg2);
+                } else if (arg1 instanceof Double) {
+                    return ((Double) arg1) - ((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1) - ((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        MUL("*", IMUL, FMUL, LMUL, DMUL) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) * ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) * ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) * ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) * ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) * ((Character) arg2);
+                } else if (arg1 instanceof Double) {
+                    return ((Double) arg1) * ((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1) * ((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
 
-        DIV("/", IDIV, FDIV, LDIV, DDIV), REM("%", IREM, FREM, LREM, DREM),
+        DIV("/", IDIV, FDIV, LDIV, DDIV) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) / ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) / ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) / ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) / ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) / ((Character) arg2);
+                } else if (arg1 instanceof Double) {
+                    return ((Double) arg1) / ((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1) / ((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        REM("%", IREM, FREM, LREM, DREM) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) % ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) % ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) % ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) % ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) % ((Character) arg2);
+                } else if (arg1 instanceof Double) {
+                    return ((Double) arg1) % ((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1) % ((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
 
-        SHL("<<", ISHL, LSHL), SHR(">>", ISHR, LSHR), USHR(">>>", IUSHR, LUSHR),
+        SHL("<<", ISHL, LSHL) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) << ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) << ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) << ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) << ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) << ((Character) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        SHR(">>", ISHR, LSHR) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) >> ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) >> ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) >> ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) >> ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) >> ((Character) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        USHR(">>>", IUSHR, LUSHR) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) >>> ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) >>> ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) >>> ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) >>> ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) >>> ((Character) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
 
-        AND("&", IAND, LAND), OR("|", IOR, LOR), XOR("^", IXOR, LXOR),
+        AND("&", IAND, LAND) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) & ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) & ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) & ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) & ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) & ((Character) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        OR("|", IOR, LOR) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) | ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) | ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) | ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) | ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) | ((Character) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        XOR("^", IXOR, LXOR) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Long) {
+                    return ((Long) arg1) ^ ((Long) arg2);
+                } else if (arg1 instanceof Integer) {
+                    return ((Integer) arg1) ^ ((Integer) arg2);
+                } else if (arg1 instanceof Short) {
+                    return ((Short) arg1) ^ ((Short) arg2);
+                } else if (arg1 instanceof Byte) {
+                    return ((Byte) arg1) ^ ((Byte) arg2);
+                } else if (arg1 instanceof Character) {
+                    return ((Character) arg1) ^ ((Character) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
 
-        CMP(Integer.TYPE, "==", LCMP), CMPL(Integer.TYPE, "cmpl", FCMPL, DCMPL), CMPG(Integer.TYPE, "cmpg", FCMPG,
-                DCMPG);
+        CMP(Integer.TYPE, "==", LCMP) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                return ((Long) arg1).compareTo((Long) arg2);
+            }
+        },
+        CMPL(Integer.TYPE, "cmpl", FCMPL, DCMPL) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Double) {
+                    return ((Double) arg1).compareTo((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1).compareTo((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        },
+        CMPG(Integer.TYPE, "cmpg", FCMPG, DCMPG) {
+            @Override
+            public Object evaluate(Object arg1, Object arg2) {
+                if (arg1 instanceof Double) {
+                    return ((Double) arg1).compareTo((Double) arg2);
+                } else if (arg1 instanceof Float) {
+                    return ((Float) arg1).compareTo((Float) arg2);
+                }
+                throw new UnsupportedOperationException("Unknown argument type: " + arg1);
+            }
+        };
 
         public final String symbol;
         private final int[] opcodes;
@@ -43,6 +272,8 @@ public class BinaryArithmeticExpression extends Expression {
             }
             return null;
         }
+
+        public abstract Object evaluate(Object arg1, Object arg2);
     }
 
     public BinaryArithmeticExpression(ArithmeticOperation op, Expression exp1, Expression exp2) {
@@ -55,6 +286,11 @@ public class BinaryArithmeticExpression extends Expression {
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return exp1 + " " + op.symbol + " " + exp2;
     }
 
 }

@@ -3,6 +3,7 @@ package com.github.ruediste.lambdaInspector;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.junit.Before;
@@ -10,11 +11,12 @@ import org.junit.Test;
 
 import com.github.ruediste.lambdaInspector.Lambda.LambdaPropertyHandle;
 
-public class LambdaPropertyAnalyzerTest {
+public class LambdaAccessedMemberAnalyzerTest {
 
     String foo;
 
     int intVar;
+    Integer integerVar;
 
     public String getBar() {
         return "bar";
@@ -22,12 +24,21 @@ public class LambdaPropertyAnalyzerTest {
 
     private static class A {
         String foo = "foo";
+        A a;
+
+        public A getA(int index) {
+            return a;
+        }
     }
 
-    A test = new A();
+    A test;
 
     @Before
     public void before() {
+        test = new A();
+        test.a = new A();
+        test.a.foo = "bar";
+
         LambdaInspector.setup();
     }
 
@@ -55,9 +66,22 @@ public class LambdaPropertyAnalyzerTest {
     }
 
     @Test
-    public void testCastToInt() {
+    public void testCastToInteger() {
         LambdaPropertyHandle inspect = LambdaInspector.inspect((Supplier<Integer>) () -> intVar).property;
         assertEquals("intVar", inspect.info.accessor.getName());
         assertSame(this, inspect.getBase());
+    }
+
+    @Test
+    public void testCastToInt() {
+        LambdaPropertyHandle inspect = LambdaInspector.inspect((IntSupplier) () -> integerVar).property;
+        assertEquals("integerVar", inspect.info.accessor.getName());
+        assertSame(this, inspect.getBase());
+    }
+
+    @Test
+    public void testComplexBases() {
+        assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.a.foo).property.getBase());
+        assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.getA(7).foo).property.getBase());
     }
 }

@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import com.github.ruediste.lambdaInspector.expr.Expression;
 
 public class LambdaStatic {
-    public static class LambdaPropertyInfo {
+    public static class LambdaAccessedMemberInfo {
         public Expression base;
 
         public Member accessor;
@@ -19,8 +19,8 @@ public class LambdaStatic {
     public Method implementationMethod;
     public Class<?>[] capturedTypes;
     public Class<?>[] argumentTypes;
-    public Expression expression;
 
-    LambdaPropertyInfo propertyInfo;
+    public Expression expression;
+    public LambdaAccessedMemberInfo accessedMemberInfo;
 
 }

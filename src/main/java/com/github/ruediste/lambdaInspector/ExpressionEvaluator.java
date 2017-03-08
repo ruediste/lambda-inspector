@@ -1,5 +1,10 @@
 package com.github.ruediste.lambdaInspector;
 
+import static java.util.stream.Collectors.toList;
+
+import java.lang.reflect.Method;
+import java.util.List;
+
 import com.github.ruediste.lambdaInspector.expr.ArgumentExpression;
 import com.github.ruediste.lambdaInspector.expr.ArrayLengthExpression;
 import com.github.ruediste.lambdaInspector.expr.ArrayLoadExpression;
@@ -43,14 +48,21 @@ public class ExpressionEvaluator {
 
         @Override
         public Object visit(MethodInvocationExpression expr) {
-            // TODO Auto-generated method stub
-            return null;
+
+            Object target = null;
+            if (expr.target != null)
+                target = expr.target.accept(this);
+            List<Object> args = expr.args.stream().map(x -> x.accept(this)).collect(toList());
+            try {
+                return ((Method) expr.method).invoke(target, args.toArray());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
         public Object visit(ConstExpression constExpression) {
-            // TODO Auto-generated method stub
-            return null;
+            return constExpression.value;
         }
 
         @Override
@@ -70,9 +82,13 @@ public class ExpressionEvaluator {
         }
 
         @Override
-        public Object visit(NewExpression newExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(NewExpression expr) {
+            List<Object> args = expr.args.stream().map(x -> x.accept(this)).collect(toList());
+            try {
+                return expr.constructor.newInstance(args.toArray());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
@@ -129,9 +145,10 @@ public class ExpressionEvaluator {
         }
 
         @Override
-        public Object visit(BinaryArithmeticExpression binaryArithmeticExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(BinaryArithmeticExpression exp) {
+            Object arg1 = exp.exp1.accept(this);
+            Object arg2 = exp.exp2.accept(this);
+            return exp.op.evaluate(arg1, arg2);
         }
 
         @Override

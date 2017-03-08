@@ -1,6 +1,6 @@
 package com.github.ruediste.lambdaInspector;
 
-import com.github.ruediste.lambdaInspector.LambdaStatic.LambdaPropertyInfo;
+import com.github.ruediste.lambdaInspector.LambdaStatic.LambdaAccessedMemberInfo;
 
 /**
  * Represents information on a lambda expression
@@ -14,9 +14,9 @@ public class Lambda {
     public LambdaPropertyHandle property;
 
     public class LambdaPropertyHandle {
-        public LambdaPropertyInfo info;
+        public LambdaAccessedMemberInfo info;
 
-        public LambdaPropertyHandle(LambdaPropertyInfo propertyInfo) {
+        public LambdaPropertyHandle(LambdaAccessedMemberInfo propertyInfo) {
             info = propertyInfo;
         }
 

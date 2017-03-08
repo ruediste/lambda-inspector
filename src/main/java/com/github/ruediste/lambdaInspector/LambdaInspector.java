@@ -76,8 +76,8 @@ public class LambdaInspector {
                         result.captured[i - offset] = value;
                 }
             }
-            if (stat.propertyInfo != null) {
-                result.property = result.new LambdaPropertyHandle(stat.propertyInfo);
+            if (stat.accessedMemberInfo != null) {
+                result.property = result.new LambdaPropertyHandle(stat.accessedMemberInfo);
             }
             return result;
         } catch (Exception e) {
@@ -86,7 +86,7 @@ public class LambdaInspector {
     }
 
     private static LambdaExpressionAnalyzer analyzer = new LambdaExpressionAnalyzer();
-    private static LambdaPropertyAnalyzer propertyAnalyzer = new LambdaPropertyAnalyzer();
+    private static LambdaAccessedMemberAnalyzer propertyAnalyzer = new LambdaAccessedMemberAnalyzer();
 
     /**
      * Inspect static lambda with caching and expression parsing
@@ -95,9 +95,16 @@ public class LambdaInspector {
         // TODO: cache result
         LambdaStatic stat = inspectStaticNoExpression(lambda);
         stat.expression = analyzer.analyze(stat);
-        stat.propertyInfo = propertyAnalyzer.analyze(stat);
+        stat.accessedMemberInfo = propertyAnalyzer.analyze(stat);
         return stat;
 
+    }
+
+    /**
+     * Determine if a lambda can be inspected
+     */
+    public static boolean canBeInspected(Object lambda) {
+        return lambda.getClass().isAnnotationPresent(LambdaInformation.class);
     }
 
     /**
@@ -106,6 +113,9 @@ public class LambdaInspector {
     public static LambdaStatic inspectStaticNoExpression(Object lambda) {
         try {
             LambdaInformation info = lambda.getClass().getAnnotation(LambdaInformation.class);
+            if (info == null)
+                throw new RuntimeException(
+                        "Unable to get LambaInformation annotation on lambda object. Did you call LambdaInspector.setup()?");
             ClassLoader cl = info.implMethodClass().getClassLoader();
 
             LambdaStatic stat = new LambdaStatic();
