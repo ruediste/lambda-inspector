@@ -166,6 +166,10 @@ public class LambdaInspector {
         case Type.DOUBLE:
             cls = Double.TYPE;
             break;
+        case Type.ARRAY: {
+            cls = Class.forName("[L" + type.getElementType().getClassName() + ";", true, cl);
+            break;
+        }
         default:
             cls = cl.loadClass(type.getClassName());
         }

@@ -2,7 +2,7 @@ package com.github.ruediste.lambdaInspector.expr;
 
 public class ArgumentExpression extends Expression {
 
-    private int index;
+    public final int index;
 
     public ArgumentExpression(Class<?> type, int index) {
         super(type);

@@ -48,6 +48,15 @@ public class LambdaExpressionAnalyzerTest {
     }
 
     @Test
+    public void testCapturedPrimitive() {
+        int foo = 5;
+
+        assertEquals("java.lang.System.out.println(cap$0)", this.<Runnable>inspect(() -> {
+            System.out.println(foo);
+        }));
+    }
+
+    @Test
     public void testConstantReturn() {
         assertEquals("\"foo\"", this.<Supplier<String>>inspect(() -> "foo"));
         assertEquals("java.lang.Integer.valueOf(1)", this.<Supplier<Integer>>inspect(() -> 1));

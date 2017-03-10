@@ -106,4 +106,13 @@ public class LambdaInspectorTest {
         Lambda lambda = inspectStringSupplier(() -> new String("foo"));
         assertEquals("new java.lang.String(\"foo\")", lambda.static_.expression.toString());
     }
+
+    String getInvokedMethodName(Runnable lambda) {
+        return LambdaInspector.inspect(lambda).static_.accessedMemberInfo.member.getName();
+    }
+
+    @Test
+    public void readmeSample() {
+        assertEquals("length", getInvokedMethodName(() -> "".length()));
+    }
 }

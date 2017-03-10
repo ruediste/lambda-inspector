@@ -9,7 +9,7 @@ public class LambdaStatic {
     public static class LambdaAccessedMemberInfo {
         public Expression base;
 
-        public Member accessor;
+        public Member member;
 
         public Object getBase(Lambda lambda, Object[] args) {
             return ExpressionEvaluator.evaluate(base, lambda, args);

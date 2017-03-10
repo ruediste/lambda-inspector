@@ -2,7 +2,7 @@ package com.github.ruediste.lambdaInspector;
 
 import static java.util.stream.Collectors.toList;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Array;
 import java.util.List;
 
 import com.github.ruediste.lambdaInspector.expr.ArgumentExpression;
@@ -54,7 +54,7 @@ public class ExpressionEvaluator {
                 target = expr.target.accept(this);
             List<Object> args = expr.args.stream().map(x -> x.accept(this)).collect(toList());
             try {
-                return ((Method) expr.method).invoke(target, args.toArray());
+                return expr.method.invoke(target, args.toArray());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -67,8 +67,7 @@ public class ExpressionEvaluator {
 
         @Override
         public Object visit(ReturnAddressExpression returnAddressExpression) {
-            // TODO Auto-generated method stub
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -92,45 +91,40 @@ public class ExpressionEvaluator {
         }
 
         @Override
-        public Object visit(ArgumentExpression argumentExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(ArgumentExpression expr) {
+            return args[expr.index];
         }
 
         @Override
-        public Object visit(CapturedArgExpression capturedArgExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(CapturedArgExpression exp) {
+            return captured[exp.index];
         }
 
         @Override
-        public Object visit(UnaryExpression unaryExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(UnaryExpression exp) {
+            Object arg = exp.argument.accept(this);
+            return exp.type.eval(arg);
         }
 
         @Override
-        public Object visit(NewArrayExpression newArrayExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(NewArrayExpression expr) {
+            return Array.newInstance(expr.type.getComponentType(), (int) expr.length.accept(this));
         }
 
         @Override
-        public Object visit(ArrayLengthExpression arrayLengthExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(ArrayLengthExpression expr) {
+            Object array = expr.array.accept(this);
+            return Array.getLength(array);
         }
 
         @Override
         public Object visit(CastExpression castExpression) {
-            // TODO Auto-generated method stub
-            return null;
+            return castExpression.expr.accept(this);
         }
 
         @Override
-        public Object visit(InstanceOfExpression instanceOfExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(InstanceOfExpression expr) {
+            return expr.queryType.isInstance(expr.expr.accept(this));
         }
 
         @Override
@@ -139,9 +133,10 @@ public class ExpressionEvaluator {
         }
 
         @Override
-        public Object visit(ArrayLoadExpression arrayLoadExpression) {
-            // TODO Auto-generated method stub
-            return null;
+        public Object visit(ArrayLoadExpression expr) {
+            Object array = expr.array.accept(this);
+            Object index = expr.index.accept(this);
+            return Array.get(array, (int) index);
         }
 
         @Override
@@ -153,8 +148,7 @@ public class ExpressionEvaluator {
 
         @Override
         public Object visit(UnknownExpression unknownExpression) {
-            // TODO Auto-generated method stub
-            return null;
+            throw new UnsupportedOperationException();
         }
 
     }

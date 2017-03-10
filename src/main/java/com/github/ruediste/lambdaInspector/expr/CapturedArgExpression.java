@@ -2,7 +2,7 @@ package com.github.ruediste.lambdaInspector.expr;
 
 public class CapturedArgExpression extends Expression {
 
-    private int index;
+    public final int index;
 
     public CapturedArgExpression(Class<?> type, int index) {
         super(type);

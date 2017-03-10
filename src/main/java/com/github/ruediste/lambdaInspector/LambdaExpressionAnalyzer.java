@@ -216,7 +216,12 @@ public class LambdaExpressionAnalyzer {
         @Override
         public ExpressionValue copyOperation(AbstractInsnNode insn, ExpressionValue value) throws AnalyzerException {
             ExpressionValue result = value;
-            if (insn.getOpcode() == ALOAD) {
+            switch (insn.getOpcode()) {
+            case ILOAD:
+            case LLOAD:
+            case FLOAD:
+            case DLOAD:
+            case ALOAD: {
                 if (value.expr == null) {
                     VarInsnNode varInsn = (VarInsnNode) insn;
                     int argIdx = varInsn.var;
@@ -239,6 +244,21 @@ public class LambdaExpressionAnalyzer {
                         }
                     }
                 }
+            }
+                break;
+            case ISTORE:
+            case LSTORE:
+            case FSTORE:
+            case DSTORE:
+            case ASTORE:
+            case DUP:
+            case DUP_X1:
+            case DUP_X2:
+            case DUP2:
+            case DUP2_X1:
+            case DUP2_X2:
+            case SWAP:
+                break;
             }
             setExpressionValue(insn, result);
             return result;
@@ -319,7 +339,7 @@ public class LambdaExpressionAnalyzer {
                         String desc = ((TypeInsnNode) insn).desc;
                         Type type = Type.getObjectType(desc);
                         result = new ExpressionValue(1, new NewArrayExpression(
-                                Class.forName("[L" + type.getClassName() + ";"), value.expr, false));
+                                Class.forName("[L" + type.getClassName() + ";", true, cl), value.expr, false));
                         break;
                     }
                     case ARRAYLENGTH:
@@ -546,6 +566,11 @@ public class LambdaExpressionAnalyzer {
 
                         };
 
+                        // Iterate over all instructions and search those
+                        // without successors. This must be
+                        // return or throw expressions. For each such
+                        // instruction determin the expression that was
+                        // returned
                         try {
                             List<Expression> results = new ArrayList<>();
                             Frame<ExpressionValue>[] frames = a.analyze(owner, node);

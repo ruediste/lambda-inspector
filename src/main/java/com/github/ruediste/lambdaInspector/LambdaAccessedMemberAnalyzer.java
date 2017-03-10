@@ -74,7 +74,7 @@ public class LambdaAccessedMemberAnalyzer {
         @Override
         public LambdaAccessedMemberInfo visit(MethodInvocationExpression expr) {
             LambdaAccessedMemberInfo info = new LambdaAccessedMemberInfo();
-            info.accessor = expr.method;
+            info.member = expr.method;
             info.base = expr.target;
             return info;
         }
@@ -82,7 +82,7 @@ public class LambdaAccessedMemberAnalyzer {
         @Override
         public LambdaAccessedMemberInfo visit(GetFieldExpression expr) {
             LambdaAccessedMemberInfo info = new LambdaAccessedMemberInfo();
-            info.accessor = expr.field;
+            info.member = expr.field;
             info.base = expr.target;
             return info;
         }
