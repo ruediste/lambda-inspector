@@ -9,19 +9,22 @@ public class Lambda {
     public Object this_;
     public Object[] captured;
 
-    public LambdaStatic stat;
+    public LambdaStatic static_;
 
-    public LambdaPropertyHandle property;
+    public LambdaAccessedMemberHandle memberHandle;
 
-    public class LambdaPropertyHandle {
-        public LambdaAccessedMemberInfo info;
-
-        public LambdaPropertyHandle(LambdaAccessedMemberInfo propertyInfo) {
-            info = propertyInfo;
-        }
+    public class LambdaAccessedMemberHandle {
 
         public Object getBase(Object... args) {
-            return info.getBase(Lambda.this, args);
+            return static_.accessedMemberInfo.getBase(Lambda.this, args);
+        }
+
+        public Lambda getLambda() {
+            return Lambda.this;
+        }
+
+        public LambdaAccessedMemberInfo getInfo() {
+            return static_.accessedMemberInfo;
         }
     }
 }

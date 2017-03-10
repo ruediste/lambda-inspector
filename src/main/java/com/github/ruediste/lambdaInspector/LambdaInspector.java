@@ -60,7 +60,7 @@ public class LambdaInspector {
     public static Lambda inspect(Object lambda, LambdaStatic stat) {
         try {
             Lambda result = new Lambda();
-            result.stat = stat;
+            result.static_ = stat;
             boolean implStatic = Modifier.isStatic(inspectStatic(lambda).implementationMethod.getModifiers());
             result.captured = new Object[inspectStatic(lambda).capturedTypes.length];
             {
@@ -77,7 +77,7 @@ public class LambdaInspector {
                 }
             }
             if (stat.accessedMemberInfo != null) {
-                result.property = result.new LambdaPropertyHandle(stat.accessedMemberInfo);
+                result.memberHandle = result.new LambdaAccessedMemberHandle();
             }
             return result;
         } catch (Exception e) {
@@ -85,17 +85,16 @@ public class LambdaInspector {
         }
     }
 
-    private static LambdaExpressionAnalyzer analyzer = new LambdaExpressionAnalyzer();
-    private static LambdaAccessedMemberAnalyzer propertyAnalyzer = new LambdaAccessedMemberAnalyzer();
+    private static LambdaExpressionAnalyzer expressionAnalyzer = new LambdaExpressionAnalyzer();
+    private static LambdaAccessedMemberAnalyzer accessedMemberAnalyser = new LambdaAccessedMemberAnalyzer();
 
     /**
      * Inspect static lambda with caching and expression parsing
      */
     public static LambdaStatic inspectStatic(Object lambda) {
-        // TODO: cache result
         LambdaStatic stat = inspectStaticNoExpression(lambda);
-        stat.expression = analyzer.analyze(stat);
-        stat.accessedMemberInfo = propertyAnalyzer.analyze(stat);
+        stat.expression = expressionAnalyzer.analyze(stat);
+        stat.accessedMemberInfo = accessedMemberAnalyser.analyze(stat);
         return stat;
 
     }
@@ -119,8 +118,8 @@ public class LambdaInspector {
             ClassLoader cl = info.implMethodClass().getClassLoader();
 
             LambdaStatic stat = new LambdaStatic();
-            Class<?>[] samArgTypes = getArgumentTypes(cl, Type.getMethodType(info.samMethodDesc()));
-            Class<?>[] implArgTypes = getArgumentTypes(cl, Type.getMethodType(info.implMethodDesc()));
+            Class<?>[] samArgTypes = loadClasses(cl, Type.getMethodType(info.samMethodDesc()).getArgumentTypes());
+            Class<?>[] implArgTypes = loadClasses(cl, Type.getMethodType(info.implMethodDesc()).getArgumentTypes());
             stat.implementationMethod = info.implMethodClass().getDeclaredMethod(info.implMethodName(), implArgTypes);
             stat.argumentTypes = samArgTypes;
             stat.capturedTypes = Arrays.copyOfRange(implArgTypes, 0, implArgTypes.length - samArgTypes.length);
@@ -130,11 +129,10 @@ public class LambdaInspector {
         }
     }
 
-    public static Class<?>[] getArgumentTypes(ClassLoader cl, Type methodType) throws ClassNotFoundException {
-        Type[] implArgTypes = methodType.getArgumentTypes();
-        Class<?>[] implArgCls = new Class<?>[implArgTypes.length];
-        for (int i = 0; i < implArgTypes.length; i++) {
-            Type type = implArgTypes[i];
+    public static Class<?>[] loadClasses(ClassLoader cl, Type[] types) throws ClassNotFoundException {
+        Class<?>[] implArgCls = new Class<?>[types.length];
+        for (int i = 0; i < types.length; i++) {
+            Type type = types[i];
             Class<?> cls = loadClass(cl, type);
             implArgCls[i] = cls;
         }

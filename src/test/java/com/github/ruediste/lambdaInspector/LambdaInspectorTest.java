@@ -48,53 +48,53 @@ public class LambdaInspectorTest {
         });
         assertEquals(null, lambda.this_);
         assertArrayEquals(new Object[] {}, lambda.captured);
-        assertArrayEquals(new Type[] {}, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] {}, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.argumentTypes);
 
         lambda = inspectStringConsumer((s) -> {
         });
         assertEquals(null, lambda.this_);
         assertArrayEquals(new Object[] {}, lambda.captured);
-        assertArrayEquals(new Type[] {}, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] { Object.class }, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] { Object.class }, lambda.static_.argumentTypes);
 
         lambda = inspectRunnable(() -> System.out.print(str));
         assertEquals(this, lambda.this_);
         assertArrayEquals(new Object[] {}, lambda.captured);
-        assertArrayEquals(new Type[] {}, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] {}, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.argumentTypes);
 
         lambda = inspectStringConsumer((s) -> System.out.print(str));
         assertEquals(this, lambda.this_);
         assertArrayEquals(new Object[] {}, lambda.captured);
-        assertArrayEquals(new Type[] {}, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] { Object.class }, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] { Object.class }, lambda.static_.argumentTypes);
 
         int i = 4;
 
         lambda = inspectRunnable(() -> System.out.print(i));
         assertEquals(null, lambda.this_);
         assertArrayEquals(new Object[] { 4 }, lambda.captured);
-        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] {}, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.argumentTypes);
 
         lambda = inspectStringConsumer((s) -> System.out.print(i));
         assertEquals(null, lambda.this_);
         assertArrayEquals(new Object[] { 4 }, lambda.captured);
-        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] { Object.class }, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] { Object.class }, lambda.static_.argumentTypes);
 
         lambda = inspectRunnable(() -> System.out.print(str + i));
         assertEquals(this, lambda.this_);
         assertArrayEquals(new Object[] { 4 }, lambda.captured);
-        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] {}, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] {}, lambda.static_.argumentTypes);
 
         lambda = inspectStringConsumer((s) -> System.out.print(str + i));
         assertEquals(this, lambda.this_);
         assertArrayEquals(new Object[] { 4 }, lambda.captured);
-        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.stat.capturedTypes);
-        assertArrayEquals(new Type[] { Object.class }, lambda.stat.argumentTypes);
+        assertArrayEquals(new Type[] { Integer.TYPE }, lambda.static_.capturedTypes);
+        assertArrayEquals(new Type[] { Object.class }, lambda.static_.argumentTypes);
     }
 
     Lambda inspectStringSupplier(Supplier<String> lambda) {
@@ -104,6 +104,6 @@ public class LambdaInspectorTest {
     @Test
     public void testNew() {
         Lambda lambda = inspectStringSupplier(() -> new String("foo"));
-        assertEquals("new java.lang.String(\"foo\")", lambda.stat.expression.toString());
+        assertEquals("new java.lang.String(\"foo\")", lambda.static_.expression.toString());
     }
 }

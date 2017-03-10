@@ -2,19 +2,18 @@ package com.github.ruediste.lambdaInspector.expr;
 
 import static java.util.stream.Collectors.joining;
 
-import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Objects;
 
 public class MethodInvocationExpression extends Expression {
-    public Executable method;
+    public Method method;
     public Expression target;
     public List<Expression> args;
 
-    public MethodInvocationExpression(Executable method, Expression target, List<Expression> args) {
-        super(method instanceof Method ? ((Method) method).getReturnType() : method.getDeclaringClass());
+    public MethodInvocationExpression(Method method, Expression target, List<Expression> args) {
+        super(method instanceof Method ? method.getReturnType() : method.getDeclaringClass());
         this.method = method;
         this.target = target;
         this.args = args;

@@ -111,7 +111,7 @@ public class LambdaExpressionAnalyzerTest {
     }
 
     private <T> String inspect(T lambda) {
-        Expression expr = LambdaInspector.inspect(lambda).stat.expression;
+        Expression expr = LambdaInspector.inspect(lambda).static_.expression;
         if (expr == null)
             return null;
         return expr.toString();

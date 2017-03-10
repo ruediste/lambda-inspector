@@ -2,8 +2,6 @@ package com.github.ruediste.lambdaInspector;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -428,15 +426,11 @@ public class LambdaExpressionAnalyzer {
                     MethodInsnNode methodInsn = (MethodInsnNode) insn;
                     Class<?> owner = LambdaInspector.loadClass(cl, Type.getObjectType(methodInsn.owner));
                     Type methodType = Type.getMethodType(methodInsn.desc);
-                    Class<?>[] argTypes = LambdaInspector.getArgumentTypes(cl, methodType);
-                    Executable executable;
-                    boolean isConstructor = "<init>".equals(methodInsn.name);
-                    if (isConstructor) {
-                        executable = owner.getDeclaredConstructor(argTypes);
-                    } else
-                        executable = owner.getDeclaredMethod(methodInsn.name, argTypes);
+                    methodType.getReturnType().getSort();
+                    new String();
+                    Class<?>[] argTypes = LambdaInspector.loadClasses(cl, methodType.getArgumentTypes());
 
-                    boolean isStatic = Modifier.isStatic(executable.getModifiers());
+                    boolean isStatic = insn.getOpcode() == INVOKESTATIC;
                     List<Expression> args = new ArrayList<>();
                     Expression target = null;
                     int idx = 0;
@@ -444,14 +438,15 @@ public class LambdaExpressionAnalyzer {
                         target = values.get(idx++).expr;
                     for (; idx < values.size(); idx++)
                         args.add(values.get(idx).expr);
-                    if (isConstructor) {
+                    if ("<init>".equals(methodInsn.name)) {
                         result = values.get(0);
                         NewExpression newExpr = (NewExpression) target;
-                        newExpr.constructor = (Constructor<?>) executable;
+                        newExpr.constructor = owner.getDeclaredConstructor(argTypes);
                         newExpr.args = args;
                     } else
                         result = new ExpressionValue(methodType.getReturnType().getSize(),
-                                new MethodInvocationExpression(executable, target, args));
+                                new MethodInvocationExpression(owner.getDeclaredMethod(methodInsn.name, argTypes),
+                                        target, args));
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);

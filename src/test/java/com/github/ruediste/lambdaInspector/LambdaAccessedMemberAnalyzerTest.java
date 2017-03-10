@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.ruediste.lambdaInspector.Lambda.LambdaPropertyHandle;
+import com.github.ruediste.lambdaInspector.Lambda.LambdaAccessedMemberHandle;
 
 public class LambdaAccessedMemberAnalyzerTest {
 
@@ -44,12 +44,12 @@ public class LambdaAccessedMemberAnalyzerTest {
 
     @Test
     public void testSimple() {
-        assertEquals("foo", inspect(() -> foo).info.accessor.getName());
-        assertEquals("getBar", inspect(() -> getBar()).info.accessor.getName());
+        assertEquals("foo", inspect(() -> foo).getInfo().accessor.getName());
+        assertEquals("getBar", inspect(() -> getBar()).getInfo().accessor.getName());
     }
 
-    private LambdaPropertyHandle inspect(Supplier<String> lambda) {
-        return LambdaInspector.inspect(lambda).property;
+    private LambdaAccessedMemberHandle inspect(Supplier<String> lambda) {
+        return LambdaInspector.inspect(lambda).memberHandle;
     }
 
     @Test
@@ -60,28 +60,28 @@ public class LambdaAccessedMemberAnalyzerTest {
 
     @Test
     public void testNested() {
-        LambdaPropertyHandle inspect = inspect(() -> test.foo);
-        assertEquals("foo", inspect.info.accessor.getName());
+        LambdaAccessedMemberHandle inspect = inspect(() -> test.foo);
+        assertEquals("foo", inspect.getInfo().accessor.getName());
         assertSame(test, inspect.getBase());
     }
 
     @Test
     public void testCastToInteger() {
-        LambdaPropertyHandle inspect = LambdaInspector.inspect((Supplier<Integer>) () -> intVar).property;
-        assertEquals("intVar", inspect.info.accessor.getName());
+        LambdaAccessedMemberHandle inspect = LambdaInspector.inspect((Supplier<Integer>) () -> intVar).memberHandle;
+        assertEquals("intVar", inspect.getInfo().accessor.getName());
         assertSame(this, inspect.getBase());
     }
 
     @Test
     public void testCastToInt() {
-        LambdaPropertyHandle inspect = LambdaInspector.inspect((IntSupplier) () -> integerVar).property;
-        assertEquals("integerVar", inspect.info.accessor.getName());
+        LambdaAccessedMemberHandle inspect = LambdaInspector.inspect((IntSupplier) () -> integerVar).memberHandle;
+        assertEquals("integerVar", inspect.getInfo().accessor.getName());
         assertSame(this, inspect.getBase());
     }
 
     @Test
     public void testComplexBases() {
-        assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.a.foo).property.getBase());
-        assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.getA(7).foo).property.getBase());
+        assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.a.foo).memberHandle.getBase());
+        assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.getA(7).foo).memberHandle.getBase());
     }
 }

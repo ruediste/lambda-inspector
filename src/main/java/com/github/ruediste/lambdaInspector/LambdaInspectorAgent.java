@@ -6,15 +6,14 @@ import java.lang.instrument.Instrumentation;
 import java.lang.invoke.MethodType;
 import java.security.ProtectionDomain;
 
-import jdk.internal.org.objectweb.asm.AnnotationVisitor;
-import jdk.internal.org.objectweb.asm.ClassReader;
-import jdk.internal.org.objectweb.asm.ClassVisitor;
-import jdk.internal.org.objectweb.asm.ClassWriter;
-import jdk.internal.org.objectweb.asm.MethodVisitor;
-import jdk.internal.org.objectweb.asm.Opcodes;
-import jdk.internal.org.objectweb.asm.Type;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
-@SuppressWarnings("restriction")
 public class LambdaInspectorAgent {
     public static void agentmain(String agentArgs, Instrumentation inst) {
         premain(agentArgs, inst);

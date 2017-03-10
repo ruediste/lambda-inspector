@@ -41,7 +41,7 @@ public class ExpressionEvaluatorTest {
     }
 
     private Object inspect(Object lambda) {
-        Expression expr = LambdaInspector.inspect(lambda).stat.expression;
+        Expression expr = LambdaInspector.inspect(lambda).static_.expression;
         Object result = ExpressionEvaluator.evaluate(expr, this, new Object[] {}, new Object[] {});
         return result;
     }
