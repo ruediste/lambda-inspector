@@ -2,6 +2,7 @@ package com.github.ruediste.lambdaInspector;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Type;
 import java.util.function.Consumer;
@@ -26,7 +27,7 @@ public class LambdaInspectorTest {
         };
         LambdaInformation info = run.getClass().getAnnotation(LambdaInformation.class);
         assertEquals(LambdaInspectorTest.class, info.implMethodClass());
-        assertEquals("lambda$0", info.implMethodName());
+        assertTrue(info.implMethodName().startsWith("lambda$"));
         assertEquals("()V", info.implMethodDesc());
         assertEquals(Runnable.class, info.samClass());
         assertEquals("run", info.samMethodName());
