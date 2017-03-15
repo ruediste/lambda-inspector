@@ -8,10 +8,11 @@ import com.github.ruediste.lambdaInspector.expr.Expression;
 public class LambdaStatic {
     public static class LambdaAccessedMemberInfo {
         public Expression base;
+        public Expression expr;
 
         public Member member;
 
-        public Object getBase(Lambda lambda, Object[] args) {
+        public Object getBase(Lambda lambda, Object... args) {
             return ExpressionEvaluator.evaluate(base, lambda, args);
         }
     }

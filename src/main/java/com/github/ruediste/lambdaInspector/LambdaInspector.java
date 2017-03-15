@@ -86,7 +86,6 @@ public class LambdaInspector {
     }
 
     private static LambdaExpressionAnalyzer expressionAnalyzer = new LambdaExpressionAnalyzer();
-    private static LambdaAccessedMemberAnalyzer accessedMemberAnalyser = new LambdaAccessedMemberAnalyzer();
 
     /**
      * Inspect static lambda with caching and expression parsing
@@ -94,7 +93,7 @@ public class LambdaInspector {
     public static LambdaStatic inspectStatic(Object lambda) {
         LambdaStatic stat = inspectStaticNoExpression(lambda);
         stat.expression = expressionAnalyzer.analyze(stat);
-        stat.accessedMemberInfo = accessedMemberAnalyser.analyze(stat);
+        stat.accessedMemberInfo = LambdaAccessedMemberAnalyzer.analyze(stat);
         return stat;
 
     }

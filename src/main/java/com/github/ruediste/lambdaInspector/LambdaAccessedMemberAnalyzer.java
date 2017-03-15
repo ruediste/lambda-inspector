@@ -26,11 +26,15 @@ import com.github.ruediste.lambdaInspector.expr.UnknownExpression;
 
 public class LambdaAccessedMemberAnalyzer {
 
-    public LambdaAccessedMemberInfo analyze(LambdaStatic lambda) {
-        if (lambda.expression == null)
+    public static LambdaAccessedMemberInfo analyze(LambdaStatic lambda) {
+        return analyze(lambda.expression);
+    }
+
+    public static LambdaAccessedMemberInfo analyze(Expression expression) {
+        if (expression == null)
             return null;
 
-        return lambda.expression.accept(new CastRemover()).accept(new PropertyInfoExtractor());
+        return expression.accept(new CastRemover()).accept(new AccessedMemberExtractor());
     }
 
     private static class CastRemover extends IdentityExpressionVisitor {
@@ -67,14 +71,20 @@ public class LambdaAccessedMemberAnalyzer {
             else
                 return expr;
         }
+
+        @Override
+        public Expression visit(CastExpression expr) {
+            return expr.expr;
+        }
     }
 
-    private static class PropertyInfoExtractor implements ExpressionVisitor<LambdaAccessedMemberInfo> {
+    private static class AccessedMemberExtractor implements ExpressionVisitor<LambdaAccessedMemberInfo> {
 
         @Override
         public LambdaAccessedMemberInfo visit(MethodInvocationExpression expr) {
             LambdaAccessedMemberInfo info = new LambdaAccessedMemberInfo();
             info.member = expr.method;
+            info.expr = expr;
             info.base = expr.target;
             return info;
         }
@@ -84,6 +94,7 @@ public class LambdaAccessedMemberAnalyzer {
             LambdaAccessedMemberInfo info = new LambdaAccessedMemberInfo();
             info.member = expr.field;
             info.base = expr.target;
+            info.expr = expr;
             return info;
         }
 

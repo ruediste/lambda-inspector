@@ -79,6 +79,21 @@ public class LambdaAccessedMemberAnalyzerTest {
         assertSame(this, inspect.getBase());
     }
 
+    private <T> T cast(T value) {
+        return value;
+    }
+
+    @Test
+    public void testCast() {
+
+        Lambda inspect2 = LambdaInspector.inspect((Supplier<String>) () -> {
+            return cast(this.foo);
+        });
+        LambdaAccessedMemberHandle inspect = inspect2.memberHandle;
+        assertEquals("cast", inspect.getInfo().member.getName());
+        assertSame(this, inspect.getBase());
+    }
+
     @Test
     public void testComplexBases() {
         assertSame(test.a, LambdaInspector.inspect((Supplier<String>) () -> test.a.foo).memberHandle.getBase());

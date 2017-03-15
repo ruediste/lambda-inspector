@@ -119,6 +119,34 @@ public class LambdaExpressionAnalyzerTest {
         assertEquals(String.class, Class.forName("[Ljava.lang.String;").getComponentType());
     }
 
+    private void foo(String arg) {
+
+    }
+
+    @Test
+    public void testMethodRef() {
+        assertEquals("this.bar()", LambdaInspector.inspect((Supplier<String>) this::bar).static_.expression.toString());
+        assertEquals("this.foo(arg$0)",
+                LambdaInspector.inspect((Consumer<String>) this::foo).static_.expression.toString());
+    }
+
+    private static String barStatic() {
+        return "bar";
+    }
+
+    private static void barStatic(String arg) {
+    }
+
+    @Test
+    public void testMethodRefStatic() {
+        assertEquals("com.github.ruediste.lambdaInspector.LambdaExpressionAnalyzerTest.barStatic()",
+                LambdaInspector.inspect((Supplier<String>) LambdaExpressionAnalyzerTest::barStatic).static_.expression
+                        .toString());
+        assertEquals("com.github.ruediste.lambdaInspector.LambdaExpressionAnalyzerTest.barStatic(arg$0)",
+                LambdaInspector.inspect((Consumer<String>) LambdaExpressionAnalyzerTest::barStatic).static_.expression
+                        .toString());
+    }
+
     private <T> String inspect(T lambda) {
         Expression expr = LambdaInspector.inspect(lambda).static_.expression;
         if (expr == null)

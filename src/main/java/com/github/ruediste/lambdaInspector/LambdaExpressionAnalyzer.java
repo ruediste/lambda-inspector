@@ -1,8 +1,13 @@
 package com.github.ruediste.lambdaInspector;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -54,6 +59,16 @@ import com.github.ruediste.lambdaInspector.expr.UnaryExpression.UnaryExpressionT
 import com.github.ruediste.lambdaInspector.expr.UnknownExpression;
 
 public class LambdaExpressionAnalyzer {
+
+    private static Constructor<Lookup> lookupConstructor;
+    static {
+        try {
+            lookupConstructor = Lookup.class.getDeclaredConstructor(Class.class, Integer.TYPE);
+            lookupConstructor.setAccessible(true);
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private static class ExpressionValue implements Value {
 
@@ -197,7 +212,9 @@ public class LambdaExpressionAnalyzer {
                 case GETSTATIC: {
                     FieldInsnNode fieldInsn = (FieldInsnNode) insn;
                     Class<?> owner = LambdaInspector.loadClass(cl, Type.getObjectType(fieldInsn.owner));
-                    Field field = owner.getDeclaredField(fieldInsn.name);
+                    Class<?> fieldType = LambdaInspector.loadClass(cl, Type.getType(fieldInsn.desc));
+                    Field field = MethodHandles.reflectAs(Field.class,
+                            getLookup(owner).findStaticGetter(owner, fieldInsn.name, fieldType));
                     return new ExpressionValue(new GetFieldExpression(null, field));
                 }
                 case NEW: {
@@ -211,6 +228,11 @@ public class LambdaExpressionAnalyzer {
             } catch (Exception e) {
                 throw new AnalyzerException(insn, "Error", e);
             }
+        }
+
+        private Lookup getLookup(Class<?> owner)
+                throws InstantiationException, IllegalAccessException, InvocationTargetException {
+            return lookupConstructor.newInstance(owner, 15);
         }
 
         @Override
@@ -296,10 +318,12 @@ public class LambdaExpressionAnalyzer {
                         return null;
                     case GETFIELD: {
                         FieldInsnNode fieldInsn = (FieldInsnNode) insn;
-                        Type type = Type.getType(fieldInsn.desc);
-                        Field field = LambdaInspector.loadClass(cl, Type.getObjectType(fieldInsn.owner))
-                                .getDeclaredField(fieldInsn.name);
-                        result = new ExpressionValue(type.getSize(), new GetFieldExpression(value.expr, field));
+                        Class<?> owner = LambdaInspector.loadClass(cl, Type.getObjectType(fieldInsn.owner));
+                        Class<?> fieldType = LambdaInspector.loadClass(cl, Type.getType(fieldInsn.desc));
+                        Field field = MethodHandles.reflectAs(Field.class,
+                                getLookup(owner).findGetter(owner, fieldInsn.name, fieldType));
+
+                        result = new ExpressionValue(new GetFieldExpression(value.expr, field));
                         break;
                     }
                     case NEWARRAY: {
@@ -463,10 +487,23 @@ public class LambdaExpressionAnalyzer {
                         NewExpression newExpr = (NewExpression) target;
                         newExpr.constructor = owner.getDeclaredConstructor(argTypes);
                         newExpr.args = args;
-                    } else
+                    } else {
+
+                        Lookup lookup = getLookup(owner);
+
+                        MethodHandle handle;
+                        if (isStatic)
+                            handle = lookup.findStatic(owner, methodInsn.name,
+                                    MethodType.fromMethodDescriptorString(methodInsn.desc, cl));
+                        else
+                            handle = lookup.findVirtual(owner, methodInsn.name,
+                                    MethodType.fromMethodDescriptorString(methodInsn.desc, cl));
+                        Method method = MethodHandles.reflectAs(Method.class, handle);
+                        // Method method =
+                        // owner.getDeclaredMethod(methodInsn.name, argTypes);
                         result = new ExpressionValue(methodType.getReturnType().getSize(),
-                                new MethodInvocationExpression(owner.getDeclaredMethod(methodInsn.name, argTypes),
-                                        target, args));
+                                new MethodInvocationExpression(method, target, args));
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -609,11 +646,23 @@ public class LambdaExpressionAnalyzer {
     }
 
     public Expression analyze(LambdaStatic lambda) {
-        ClassReader cr = new ClassReader(
-                LambdaInspector.getBytecodeLoader().apply(lambda.implementationMethod.getDeclaringClass()));
-        LambdaImplClassVisitor cv = new LambdaImplClassVisitor(lambda);
-        cr.accept(cv, 0);
-        return cv.result;
+        if (lambda.implementationMethod.isSynthetic()) {
+            ClassReader cr = new ClassReader(
+                    LambdaInspector.getBytecodeLoader().apply(lambda.implementationMethod.getDeclaringClass()));
+            LambdaImplClassVisitor cv = new LambdaImplClassVisitor(lambda);
+            cr.accept(cv, 0);
+            return cv.result;
+        } else {
+            Expression target = null;
+            if (!Modifier.isStatic(lambda.implementationMethod.getModifiers())) {
+                target = new ThisExpression(lambda.implementationMethod.getDeclaringClass());
+            }
+            ArrayList<Expression> args = new ArrayList<>();
+            for (int i = 0; i < lambda.argumentTypes.length; i++) {
+                args.add(new ArgumentExpression(lambda.argumentTypes[i], i));
+            }
+            return new MethodInvocationExpression(lambda.implementationMethod, target, args);
+        }
     }
 
 }
